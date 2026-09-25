@@ -1,0 +1,30 @@
+modLoader="javafml"
+loaderVersion="[51,)"
+license="All Rights Reserved"
+issueTrackerURL="https://github.com/mastcraft/voice"
+
+[[mods]]
+modId="mastcraftvoice"
+version="${file.jarVersion}"
+displayName="MastCraft Voice"
+authors="MastCraft"
+description='''
+Proximity voice chat that uses ONLY the Minecraft connection.
+No extra UDP ports, no WebSockets, no external services.
+'''
+displayURL="https://mastcraft.com"
+logoFile="logo.png"
+
+[[dependencies.mastcraftvoice]]
+modId="forge"
+mandatory=true
+versionRange="[51,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.mastcraftvoice]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21.1,1.22)"
+ordering="NONE"
+side="BOTH"

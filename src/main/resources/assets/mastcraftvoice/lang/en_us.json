@@ -1,0 +1,13 @@
+{
+  "key.categories.mastcraftvoice": "MastCraft Voice",
+  "key.mastcraftvoice.ptt": "Push To Talk",
+  "key.mastcraftvoice.whisper": "Whisper",
+  "key.mastcraftvoice.global": "Toggle Global Voice",
+  "key.mastcraftvoice.mute": "Mute Current Speaker",
+  "mastcraftvoice.hud.title": "MastCraft Voice",
+  "mastcraftvoice.hud.mode.proximity": "Proximity",
+  "mastcraftvoice.hud.mode.whisper": "Whisper",
+  "mastcraftvoice.hud.mode.global": "Global",
+  "mastcraftvoice.hud.mic.on": "Mic: ON",
+  "mastcraftvoice.hud.mic.off": "Mic: OFF"
+}
