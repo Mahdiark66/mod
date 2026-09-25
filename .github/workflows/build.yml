@@ -17,16 +17,23 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Fix gradlew line endings and permissions
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq dos2unix
+          dos2unix gradlew
+          chmod +x gradlew
+          ls -la gradlew
+          head -n 5 gradlew
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Make gradlew executable
-        run: chmod +x ./gradlew
-
       - name: Build with Gradle
-        run: ./gradlew build --no-daemon --stacktrace
+        run: bash ./gradlew build --no-daemon --stacktrace --info
 
       - name: Upload Mod JAR
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: MastCraftVoice-client
