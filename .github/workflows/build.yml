@@ -1,49 +1,43 @@
-name: Build Mod
+name: Build Forge Mod
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+push:
+branches:
+- main
+- master
+pull_request:
+branches:
+- main
+- master
+workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+build:
+name: Build Minecraft Forge 1.21.1 Mod
+runs-on: ubuntu-latest
 
-      - name: List files
-        run: |
-          echo "===== PWD ====="
-          pwd
-          echo "===== LS ====="
-          ls -la
-          echo "===== GRADLEW EXISTS? ====="
-          ls -la gradlew || echo "gradlew NOT FOUND"
-          echo "===== JAVA ====="
-          java -version || true
+```
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
+  - name: Set up Java 21
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '21'
+      cache: gradle
 
-      - name: Try build
-        run: |
-          echo "Starting build..."
-          if [ -f ./gradlew ]; then
-            dos2unix ./gradlew || true
-            chmod +x ./gradlew
-            bash ./gradlew build --no-daemon --stacktrace
-          else
-            echo "ERROR: gradlew file is missing!"
-            exit 1
-          fi
+  - name: Make Gradle wrapper executable
+    run: chmod +x gradlew
 
-      - name: Upload Mod JAR
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: MastCraftVoice-client
-          path: build/libs/*.jar
+  - name: Build with Gradle Wrapper
+    run: ./gradlew build --no-daemon
+
+  - name: Upload built JAR
+    uses: actions/upload-artifact@v4
+    with:
+      name: MastCraftVoice-Forge-1.21.1
+      path: build/libs/*.jar
+      if-no-files-found: error
+```
