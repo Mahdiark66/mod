@@ -6,21 +6,13 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
-import net.minecraft.network.protocol.common.custom.DiscardedPayload;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * Sends and receives voice data exclusively over the existing Minecraft connection
- * using Custom Payload packets. Paper receives these as plugin messages on the
- * channel "mastcraftvoice:voice".
- *
- * No UDP sockets, no WebSockets, no extra ports.
- */
 public class ClientPacketHandler {
 
     public static final ResourceLocation CHANNEL_ID =
             ResourceLocation.fromNamespaceAndPath("mastcraftvoice", "voice");
-    public static final String CHANNEL_STRING = "mastcraftvoice:voice";
 
     private final ClientVoiceManager manager;
     private int sequence;
@@ -30,8 +22,6 @@ public class ClientPacketHandler {
     }
 
     public void init() {
-        // Channel is registered implicitly when we send CustomPacketPayload
-        // with the ResourceLocation that Paper has registered as a plugin channel.
     }
 
     public void sendVoiceData(byte mode, byte[] audio) {
@@ -43,8 +33,7 @@ public class ClientPacketHandler {
                     audio
             );
             sendRaw(packet.encode());
-        } catch (Exception e) {
-            // swallow
+        } catch (Exception ignored) {
         }
     }
 
@@ -57,32 +46,52 @@ public class ClientPacketHandler {
                     mode
             );
             sendRaw(packet.encode());
-        } catch (Exception e) {
-            // ignore
+        } catch (Exception ignored) {
         }
     }
 
     private void sendRaw(byte[] data) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.getConnection() == null) return;
-        if (data == null || data.length == 0) return;
-        if (data.length > 30000) return;
+        if (data == null || data.length == 0 || data.length > 30000) return;
 
         try {
-            DiscardedPayload payload = new DiscardedPayload(CHANNEL_ID, Unpooled.wrappedBuffer(data));
-            ServerboundCustomPayloadPacket packet = new ServerboundCustomPayloadPacket(payload);
-            mc.getConnection().send(packet);
-        } catch (Exception e) {
-            try {
-                FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(data));
-                DiscardedPayload payload = new DiscardedPayload(CHANNEL_ID, buf);
-                mc.getConnection().send(new ServerboundCustomPayloadPacket(payload));
-            } catch (Exception ignored) {
-            }
+            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+            buf.writeBytes(data);
+            CustomPacketPayload payload = new VoicePayload(buf);
+            mc.getConnection().send(new ServerboundCustomPayloadPacket(payload));
+        } catch (Exception ignored) {
         }
     }
 
     public void onServerPayload(byte[] raw) {
         manager.handleIncoming(raw);
+    }
+
+    public static final class VoicePayload implements CustomPacketPayload {
+        public static final Type<VoicePayload> TYPE = new Type<>(CHANNEL_ID);
+        private final byte[] data;
+
+        public VoicePayload(FriendlyByteBuf buf) {
+            this.data = new byte[buf.readableBytes()];
+            buf.readBytes(this.data);
+        }
+
+        public VoicePayload(byte[] data) {
+            this.data = data;
+        }
+
+        public void write(FriendlyByteBuf buf) {
+            buf.writeBytes(data);
+        }
+
+        public byte[] data() {
+            return data;
+        }
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
     }
 }

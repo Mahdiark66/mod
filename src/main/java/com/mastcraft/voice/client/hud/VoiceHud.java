@@ -4,7 +4,7 @@ import com.mastcraft.voice.client.ClientVoiceManager;
 import com.mastcraft.voice.network.VoicePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraftforge.client.event.RenderGuiEvent;
+import net.minecraftforge.client.event.RenderGuiLayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class VoiceHud {
@@ -16,7 +16,7 @@ public class VoiceHud {
     }
 
     @SubscribeEvent
-    public void onRender(RenderGuiEvent.Post event) {
+    public void onRender(RenderGuiLayerEvent.Post event) {
         if (!manager.isHudEnabled()) return;
 
         Minecraft mc = Minecraft.getInstance();
@@ -39,7 +39,7 @@ public class VoiceHud {
             micColor = 0xFF5555;
         }
 
-        g.drawString(mc.font, "🎙 MastCraft Voice", x, y, 0xFFFFFF, true);
+        g.drawString(mc.font, "MastCraft Voice", x, y, 0xFFFFFF, true);
         g.drawString(mc.font, "Mode: " + modeName, x, y + 12, 0xCCCCCC, true);
         g.drawString(mc.font, mic, x, y + 24, micColor, true);
     }
