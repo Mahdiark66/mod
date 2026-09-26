@@ -2,6 +2,7 @@ package com.mastcraft.voice;
 
 import com.mastcraft.voice.client.ClientVoiceManager;
 import com.mastcraft.voice.client.KeyBindings;
+import com.mastcraft.voice.client.network.ClientPacketHandler;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.GameShuttingDownEvent;
@@ -20,6 +21,9 @@ public class MastCraftVoiceMod {
 
     public MastCraftVoiceMod() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        // ثبت payload شبکه (Forge 1.21.1)
+        modBus.addListener(ClientPacketHandler::registerPayloads);
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             modBus.addListener(this::onClientSetup);
