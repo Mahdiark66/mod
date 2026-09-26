@@ -2,13 +2,13 @@ package com.mastcraft.voice.client.network;
 
 import com.mastcraft.voice.client.ClientVoiceManager;
 import com.mastcraft.voice.network.VoicePacket;
-import io.netty.buffer.Unpooled;
-import net.minecraft.client.Minecraft;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * ارسال صدا فعلاً غیرفعال شده تا از کرش
+ * EncoderException: custom_payload جلوگیری شود.
+ * بعداً با ثبت صحیح Payload در Forge 1.21.1 فعال می‌شود.
+ */
 public class ClientPacketHandler {
 
     public static final ResourceLocation CHANNEL_ID =
@@ -16,15 +16,18 @@ public class ClientPacketHandler {
 
     private final ClientVoiceManager manager;
     private int sequence;
+    private boolean sendEnabled = false; // فعلاً خاموش
 
     public ClientPacketHandler(ClientVoiceManager manager) {
         this.manager = manager;
     }
 
     public void init() {
+        // ثبت شبکه بعداً اضافه می‌شود
     }
 
     public void sendVoiceData(byte mode, byte[] audio) {
+        if (!sendEnabled) return;
         try {
             VoicePacket packet = VoicePacket.createClientData(
                     ++sequence,
@@ -32,66 +35,27 @@ public class ClientPacketHandler {
                     mode,
                     audio
             );
-            sendRaw(packet.encode());
+            // TODO: ارسال امن بعد از ثبت Payload
         } catch (Exception ignored) {
         }
     }
 
     public void sendControl(byte type, byte mode) {
+        if (!sendEnabled) return;
         try {
-            VoicePacket packet = VoicePacket.createControl(
-                    type,
-                    ++sequence,
-                    System.currentTimeMillis(),
-                    mode
-            );
-            sendRaw(packet.encode());
-        } catch (Exception ignored) {
-        }
-    }
-
-    private void sendRaw(byte[] data) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.getConnection() == null) return;
-        if (data == null || data.length == 0 || data.length > 30000) return;
-
-        try {
-            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
-            buf.writeBytes(data);
-            CustomPacketPayload payload = new VoicePayload(buf);
-            mc.getConnection().send(new ServerboundCustomPayloadPacket(payload));
+            ++sequence;
         } catch (Exception ignored) {
         }
     }
 
     public void onServerPayload(byte[] raw) {
-        manager.handleIncoming(raw);
+        try {
+            manager.handleIncoming(raw);
+        } catch (Exception ignored) {
+        }
     }
 
-    public static final class VoicePayload implements CustomPacketPayload {
-        public static final Type<VoicePayload> TYPE = new Type<>(CHANNEL_ID);
-        private final byte[] data;
-
-        public VoicePayload(FriendlyByteBuf buf) {
-            this.data = new byte[buf.readableBytes()];
-            buf.readBytes(this.data);
-        }
-
-        public VoicePayload(byte[] data) {
-            this.data = data;
-        }
-
-        public void write(FriendlyByteBuf buf) {
-            buf.writeBytes(data);
-        }
-
-        public byte[] data() {
-            return data;
-        }
-
-        @Override
-        public Type<? extends CustomPacketPayload> type() {
-            return TYPE;
-        }
+    public void setSendEnabled(boolean enabled) {
+        this.sendEnabled = enabled;
     }
 }
