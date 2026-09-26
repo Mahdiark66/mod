@@ -4,7 +4,7 @@ import com.mastcraft.voice.client.ClientVoiceManager;
 import com.mastcraft.voice.network.VoicePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraftforge.client.event.RenderGuiLayerEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class VoiceHud {
@@ -16,13 +16,16 @@ public class VoiceHud {
     }
 
     @SubscribeEvent
-    public void onRender(RenderGuiLayerEvent.Post event) {
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         if (!manager.isHudEnabled()) return;
+    }
 
+    public void render(GuiGraphics g) {
+        if (!manager.isHudEnabled()) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.options.hideGui) return;
 
-        GuiGraphics g = event.getGuiGraphics();
         int x = 6;
         int y = 6;
 
